@@ -2,7 +2,7 @@
 
 namespace Codecool.MarsExploration.MapExplorer.Pathfinder;
 
-public interface AStarAlgorithm
+public interface ICostCalculator
 {
     public int GCost(Coordinate startingNode, Coordinate targetNode);
     public int HCost(Coordinate endNode, Coordinate targetNode);
