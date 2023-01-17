@@ -39,12 +39,12 @@ public class ExplorationSimulator : IExplorationSimulator
     {
         var map = _mapLoader.Load(configuration.MapFile);
         var landingSpot = CheckLandingSpotForClear(configuration.LandingSpot, map);
-        var rover = _roverDeployer.Deploy();
-        var simulationContext = new SimulationContext(0, configuration.StepsToTimeOut, rover,
-            landingSpot, map, configuration.SymbolsOfTheResources);
-        ExploringRoutine exploringRoutine = new ExploringRoutine(simulationContext);
-        
-        SimulationLoop(simulationContext, exploringRoutine);
+        // var rover = _roverDeployer.Deploy();
+        // var simulationContext = new SimulationContext(0, configuration.StepsToTimeOut, rover,
+        //     landingSpot, map, configuration.SymbolsOfTheResources);
+        // ExploringRoutine exploringRoutine = new ExploringRoutine(simulationContext);
+        //
+        // SimulationLoop(simulationContext, exploringRoutine);
     }
 
     public SimulationContext HandleOutcome(SimulationContext simulationContext, ExplorationOutcome outcome)
@@ -59,7 +59,7 @@ public class ExplorationSimulator : IExplorationSimulator
                simulationContext.StepsToReachTimeOut >= step)
         {
             _simulationStepLoggingUi.Run(simulationContext, step);
-            exploringRoutine.Step(simulationContext.Rover);
+            //exploringRoutine.Step(simulationContext.Rover);
             var results = new[]
             {
                 _lackOfResourcesAnalyzer.Analyze(simulationContext, step),
