@@ -18,7 +18,7 @@ public class SimulationStepLoggingUi
         switch (simulationContext.ExplorationOutcome)
         {
             case ExplorationOutcome.InProgress:
-                _logger.Log($"STEP {step} EVENT position UNIT {simulationContext.Rover.Id} POSITION [{simulationContext.Rover.CurrentPosition.X}, {simulationContext.Rover.CurrentPosition.Y}]");
+                _logger.Log($"STEP {step} EVENT position UNIT {simulationContext.Rovers.First().Id} POSITION [{simulationContext.Rovers.First().CurrentPosition.X}, {simulationContext.Rovers.First().CurrentPosition.Y}]");
                 break;
             case ExplorationOutcome.Colonizable:
                 _logger.Log(

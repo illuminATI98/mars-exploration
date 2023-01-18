@@ -20,7 +20,7 @@ class Program
     {
         var mapFile = $@"{WorkDir}\Resources\exploration-0.map";
         var resources = new List<string>() { "*", "%" };
-        const int stepsToTimeout = 1000;
+        const int stepsToTimeout = 100;
         var landingSpot = new Coordinate(6, 6);
 
         var configObject = new Configuration.Configuration(mapFile, landingSpot, resources, stepsToTimeout);
@@ -34,8 +34,9 @@ class Program
         IRoverDeployer roverDeployer = new RoverDeployer(coordinateCalculator,configObject,mapLoader);
         ILogger logger = new ConsoleLogger();
         SimulationStepLoggingUi simulationStepLoggingUi = new SimulationStepLoggingUi(logger);
+        IGetLocationOfCommanCentre getLocationOfCommanCentre = new GetLocationOfCommandCentre(coordinateCalculator,configObject,mapLoader);
 
-        IExplorationSimulator explorationSimulator = new ExplorationSimulator(mapLoader, configurationValidator, lackOfResourcesAnalyzer,successAnalyzer,timeOutAnalyzer,roverDeployer, simulationStepLoggingUi);
+        IExplorationSimulator explorationSimulator = new ExplorationSimulator(mapLoader, configurationValidator, lackOfResourcesAnalyzer,successAnalyzer,timeOutAnalyzer,roverDeployer, simulationStepLoggingUi, getLocationOfCommanCentre);
         
         explorationSimulator.RunSimulation(configObject);
     }
