@@ -5,5 +5,5 @@ namespace Codecool.MarsExploration.MapExplorer.MarsRover.Service;
 
 public interface IGetLocationOfCommanCentre
 {
-    Coordinate GetCentreLocation(Coordinate roverCurrentPosition, SimulationContext simulationContext);
+    CommandCenter.Model.CommandCenter GetCentreLocation(Coordinate roverCurrentPosition, SimulationContext simulationContext);
 }

@@ -1,3 +1,4 @@
+using Codecool.MarsExploration.MapExplorer.CommandCenter.Model;
 using Codecool.MarsExploration.MapExplorer.Simulation.Model;
 using Codecool.MarsExploration.MapGenerator.Calculators.Model;
 using Codecool.MarsExploration.MapGenerator.Calculators.Service;
@@ -21,7 +22,7 @@ public class GetLocationOfCommandCentre : IGetLocationOfCommanCentre
         _mapLoader = mapLoader;
     }
     
-    public Coordinate GetCentreLocation(Coordinate roverCurrentPosition, SimulationContext simulationContext)
+    public CommandCenter.Model.CommandCenter GetCentreLocation(Coordinate roverCurrentPosition, SimulationContext simulationContext)
     {
         var adjacentCoords = GetVisibleTiles(roverCurrentPosition, simulationContext);
         var emptyTiles = new List<Coordinate>();
@@ -36,7 +37,7 @@ public class GetLocationOfCommandCentre : IGetLocationOfCommanCentre
         }
         
         var randomCoordinate = GetTargetCoordinate(emptyTiles);
-        return randomCoordinate;
+        return new CommandCenter.Model.CommandCenter("CENTER-1", randomCoordinate, 1, Status.Expanding);
     }
     
     private List<Coordinate> GetVisibleTiles(Coordinate coordinate, SimulationContext simulationContext)

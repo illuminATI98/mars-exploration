@@ -63,9 +63,9 @@ public class ExplorationSimulator : IExplorationSimulator
 
         var colonizableSpot = simulationContext.Rovers.First().CurrentPosition;
         
-        //Choose the location of the future command centre
-        var locationOfTheCommandCentre = _getLocationOfCommandCentre.GetCentreLocation(colonizableSpot, simulationContext);
-        Console.WriteLine(locationOfTheCommandCentre);
+        //Choose the location of the command centre 
+        var commandCentre = _getLocationOfCommandCentre.GetCentreLocation(colonizableSpot, simulationContext);
+        Console.WriteLine(commandCentre.CurrentPosition);
         
         //Rover one extracts minerals and gathers them at the chosen command centre Coordinate
 
