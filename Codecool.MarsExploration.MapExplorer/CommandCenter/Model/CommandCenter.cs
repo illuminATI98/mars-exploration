@@ -4,11 +4,11 @@ namespace Codecool.MarsExploration.MapExplorer.CommandCenter.Model;
 
 public class CommandCenter
 {
-    public string Id { get; set; }
+    public string Id { get; }
     
-    public Coordinate CurrentPosition { get; set; }
+    public Coordinate CurrentPosition { get; }
     
-    public int Radius { get; set; }
+    public int Radius { get; }
     
     public Status Status { get; set; }
 
