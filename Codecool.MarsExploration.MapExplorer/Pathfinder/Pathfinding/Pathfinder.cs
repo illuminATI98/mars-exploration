@@ -26,14 +26,7 @@ public class Pathfinder : IPathfinder
         
         while (openNodes.Count > 0 && !exit)
         {
-            Node currentNode = openNodes[0];
-            for (int i = 0; i < openNodes.Count; i++)
-            {
-                if (openNodes[i].FCost < currentNode.FCost || openNodes[i].FCost == currentNode.FCost && openNodes[i].HCost < currentNode.HCost)
-                {
-                    currentNode = openNodes[i];
-                }
-            }
+            Node currentNode = SetCurrentNode(openNodes[0], openNodes);
 
             openNodes.Remove(currentNode);
             closedNodes.Add(currentNode);
@@ -90,7 +83,6 @@ public class Pathfinder : IPathfinder
             {
                 openNodes.Add(neighbour);
             }
-
             if (neighbour.MapPosition == targetNode.MapPosition)
             {
                 targetNode.Parent = currentNode;
@@ -100,5 +92,19 @@ public class Pathfinder : IPathfinder
                 neighbour.Parent = currentNode;
             }
         }
+    }
+
+    private Node SetCurrentNode(Node starting, List<Node> openNodes)
+    {
+        Node currentNode = starting;
+        for (int i = 0; i < openNodes.Count; i++)
+        {
+            if (openNodes[i].FCost < currentNode.FCost || openNodes[i].FCost == currentNode.FCost && openNodes[i].HCost < currentNode.HCost)
+            {
+                currentNode = openNodes[i];
+            }
+        }
+
+        return currentNode;
     }
 }
