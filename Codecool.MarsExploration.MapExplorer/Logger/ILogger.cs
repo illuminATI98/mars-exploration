@@ -6,9 +6,8 @@ namespace Codecool.MarsExploration.MapExplorer.Logger;
 public interface ILogger
 {
     void Log(string message);
-    void Position(Rover rover);
-    void Position(CommandCenter.Model.CommandCenter commandCenter);
-    void Step(SimulationContext simulationContext);
+    void Position(Rover rover,SimulationContext simulationContext);
+    void Position(CommandCenter.Model.CommandCenter commandCenter,SimulationContext simulationContext);
     void OutCome(SimulationContext simulationContext);
-    void Construction(Construction.Model.Construction simulationContext);
+    void Construction(SimulationContext simulationContext);
 }

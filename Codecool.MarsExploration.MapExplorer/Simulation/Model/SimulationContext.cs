@@ -6,4 +6,4 @@ using Codecool.MarsExploration.MapExplorer.Construction;
 
 namespace Codecool.MarsExploration.MapExplorer.Simulation.Model;
 
-public record SimulationContext(int Step, int StepsToReachTimeOut, IEnumerable<Rover> Rovers,IEnumerable<CommandCenter.Model.CommandCenter> CommandCenters,IEnumerable<Construction.Model.Construction> Constructions,Coordinate LocationOfTheSpaceship, Map Map, IEnumerable<string> SymbolsToLookFor, ExplorationOutcome ExplorationOutcome = ExplorationOutcome.InProgress);
+public record SimulationContext(int Step, int StepsToReachTimeOut, IEnumerable<Rover> Rovers,IEnumerable<CommandCenter.Model.CommandCenter> CommandCenters,Construction.Model.Construction Construction,Coordinate LocationOfTheSpaceship, Map Map, IEnumerable<string> SymbolsToLookFor, ExplorationOutcome ExplorationOutcome = ExplorationOutcome.InProgress);

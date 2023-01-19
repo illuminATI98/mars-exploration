@@ -41,7 +41,7 @@ class Program
         IPathfinder pathfinder = new Pathfinder.Pathfinding.Pathfinder(coordinateCalculator,
             mapLoader.Load(mapFile).Representation, costCalculator);
 
-        IExplorationSimulator explorationSimulator = new ExplorationSimulator(mapLoader, configurationValidator, lackOfResourcesAnalyzer,successAnalyzer,timeOutAnalyzer,roverDeployer, simulationStepLoggingUi, getLocationOfCommanCentre, pathfinder);
+        IExplorationSimulator explorationSimulator = new ExplorationSimulator(mapLoader, configurationValidator, lackOfResourcesAnalyzer,successAnalyzer,timeOutAnalyzer,roverDeployer, simulationStepLoggingUi, getLocationOfCommanCentre, pathfinder, coordinateCalculator);
         
         explorationSimulator.RunSimulation(configObject);
     }
