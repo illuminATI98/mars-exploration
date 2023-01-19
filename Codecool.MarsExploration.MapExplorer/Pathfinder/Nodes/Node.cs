@@ -10,7 +10,6 @@ public class Node
     public int GCost { get; set;}
     public int HCost { get; set;}
     public int FCost => GCost + HCost;
-    private int _heapIndex;
     public Node(bool traversable, Coordinate mapPosition)
     {
         Traversable = traversable;
