@@ -11,7 +11,18 @@ public class ConsoleLogger : ILogger
     }
     public void Position(Rover rover,SimulationContext simulationContext)
     {
-        Console.WriteLine($"STEP {simulationContext.Step}; EVENT position; UNIT {rover.Id};POSITION [{rover.CurrentPosition.X},{rover.CurrentPosition.Y}]");
+        if (rover.CurrentRoutine == Routine.Extracting)
+        {
+            Console.WriteLine($"STEP {simulationContext.Step}; EVENT extraction; UNIT {rover.Id}; RESOURCE {rover.Resource}; PROGRESS {rover.Progress}");
+        }
+        else if (rover.CurrentRoutine == Routine.Delivering)
+        {
+            Console.WriteLine($"STEP {simulationContext.Step}; EVENT delivery; UNIT {rover.Id}; RESOURCE {rover.Resource}; PROGRESS {rover.Progress}");
+        }
+        else
+        {
+            Console.WriteLine($"STEP {simulationContext.Step}; EVENT position; UNIT {rover.Id};POSITION [{rover.CurrentPosition.X},{rover.CurrentPosition.Y}]");
+        }
     }
     public void Position(CommandCenter.Model.CommandCenter commandCenter,SimulationContext simulationContext)
     {
