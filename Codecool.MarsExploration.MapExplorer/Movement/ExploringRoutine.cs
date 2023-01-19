@@ -52,4 +52,9 @@ public class ExploringRoutine : BaseRoutine
                && coordinate.Y < map.GetLength(1)
                && map[coordinate.X, coordinate.Y] == " ";
     }
+
+    public void MoveRover(Rover rover, Coordinate coordinate)
+    {
+        Move(rover, coordinate);
+    }
 }
