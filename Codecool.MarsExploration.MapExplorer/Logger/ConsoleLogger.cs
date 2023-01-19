@@ -15,6 +15,10 @@ public class ConsoleLogger : ILogger
         Console.WriteLine($"STEP {simulationContext.Step}; EVENT position; UNIT {rover.Id};POSITION [{rover.CurrentPosition.X},{rover.CurrentPosition.Y}]");
     }
 
+    public void TargetPosition(Rover rover, SimulationContext simulationContext, Coordinate coordinate)
+    {
+        Console.WriteLine($"STEP {simulationContext.Step}; EVENT target_position; UNIT {rover.Id}; TARGET POSITION [{coordinate.X},{coordinate.Y}]\n");
+    }
     public void Extracting(Rover rover, SimulationContext simulationContext)
     {
         Console.WriteLine($"\nSTEP {simulationContext.Step}; EVENT extraction; UNIT {rover.Id}; RESOURCE {rover.Resource}; PROGRESS {rover.Progress}/{rover.ResourcesToMine}\n");
