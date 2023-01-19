@@ -4,7 +4,6 @@ namespace Codecool.MarsExploration.MapExplorer.Pathfinder;
 
 public interface ICostCalculator
 {
-    public int GCost(Coordinate startingNode, Coordinate targetNode);
-    public int HCost(Coordinate endNode, Coordinate targetNode);
-    public int FCost(int gCost, int hCost);
+    public int GetDistanceCost(Node nodeA, Node nodeB);
+
 }
