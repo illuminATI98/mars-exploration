@@ -9,29 +9,20 @@ public class ConsoleLogger : ILogger
     {
         Console.WriteLine(message);
     }
-
-    public void Position(Rover rover)
+    public void Position(Rover rover,SimulationContext simulationContext)
     {
-        Console.Write($"EVENT position; UNIT {rover.Id};POSITION [{rover.CurrentPosition.X},{rover.CurrentPosition.Y}]");
+        Console.WriteLine($"STEP {simulationContext.Step}; EVENT position; UNIT {rover.Id};POSITION [{rover.CurrentPosition.X},{rover.CurrentPosition.Y}]");
     }
-
-    public void Position(CommandCenter.Model.CommandCenter commandCenter)
+    public void Position(CommandCenter.Model.CommandCenter commandCenter,SimulationContext simulationContext)
     {
-        Console.Write($"EVENT position; UNIT {commandCenter.Id};POSITION [{commandCenter.CurrentPosition.X},{commandCenter.CurrentPosition.Y}]");
+        Console.WriteLine($"STEP {simulationContext.Step}; EVENT position; UNIT {commandCenter.Id};POSITION [{commandCenter.CurrentPosition.X},{commandCenter.CurrentPosition.Y}]");
     }
-
-    public void Step(SimulationContext simulationContext)
-    {
-        Console.WriteLine($"STEP {simulationContext.Step};");
-    }
-
     public void OutCome(SimulationContext simulationContext)
     {
-        Console.Write($"EVENT outcome; OUTCOME {simulationContext.ExplorationOutcome}");
+        Console.WriteLine($"STEP {simulationContext.Step}; EVENT outcome; OUTCOME {simulationContext.ExplorationOutcome}");
     }
-
-    public void Construction(Construction.Model.Construction construction)
+    public void Construction(SimulationContext simulationContext)
     {
-        Console.Write($"EVENT construction; UNIT {construction.UnitId}; POSITION [{construction.Position.X},{construction.Position.Y}]; PROGRESS {construction.Progress} of {construction.StepsToComplete}");
+        Console.WriteLine($"STEP {simulationContext.Step}; EVENT construction; UNIT {simulationContext.Construction.UnitId}; POSITION [{simulationContext.Construction.Position.X},{simulationContext.Construction.Position.Y}]; PROGRESS {simulationContext.Construction.Progress} of {simulationContext.Construction.StepsToComplete}");
     }
 }
