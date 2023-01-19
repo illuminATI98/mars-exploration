@@ -31,18 +31,5 @@ public class SimulationStepLoggingUi
                 _logger.OutCome(simulationContext);
                 break;
         }
-
-        foreach (var simulationContextRover in simulationContext.Rovers)
-        {
-            switch (simulationContextRover.CurrentRoutine)
-            {
-                case Routine.Exploring:
-                    _logger.Position(simulationContextRover, simulationContext);
-                    break;
-                case Routine.Extracting:
-                    _logger.Extracting(simulationContextRover, simulationContext);
-                        break;
-            }
-        }
     }
 }
