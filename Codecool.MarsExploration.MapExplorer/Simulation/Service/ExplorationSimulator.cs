@@ -79,17 +79,14 @@ public class ExplorationSimulator : IExplorationSimulator
         
         
         //Rover one extracts minerals and gathers them at the command centre Coordinate
-        //FirstRoverPath(simulationContext, map, _coordinateCalculator);
+        FirstRoverPath(simulationContext, map, _coordinateCalculator);
         
         //Build the centre
         simulationContext = _builder.Build(simulationContext, "center");
         //Build rover2
         simulationContext = _builder.Build(simulationContext, "rover");
         //Rover2 extracts waters
-        foreach (var simulationContextRover in simulationContext.Rovers)
-        {
-            Console.WriteLine(simulationContextRover.Id);
-        }
+        SecondRoverPath(simulationContext, map, _coordinateCalculator);
 
 
     }
@@ -209,9 +206,9 @@ public class ExplorationSimulator : IExplorationSimulator
     private void SecondRoverPath(SimulationContext simulationContext, Map map,
         ICoordinateCalculator coordinateCalculator)
     {
-        Node started = new Node(true, simulationContext.Rovers.First(x => x.Id == "MER-B Opportunity-2").CurrentPosition);
+        Node started = new Node(true, simulationContext.Rovers.First(x => x.Id == simulationContext.Construction.UnitId).CurrentPosition);
         var waterPlaces = new List<Coordinate>();
-        foreach (var encounteredResource in simulationContext.Rovers.First(x => x.Id == "MER-B Opportunity-2").EncounteredResources)
+        foreach (var encounteredResource in simulationContext.Rovers.First().EncounteredResources)
         {
             if (map.Representation[encounteredResource.X, encounteredResource.Y] == "*")
             {
@@ -221,7 +218,7 @@ public class ExplorationSimulator : IExplorationSimulator
         
         foreach (var waterPlace in waterPlaces)
         {
-            Node start = new Node(true, simulationContext.Rovers.First(x => x.Id == "MER-B Opportunity-2").CurrentPosition);
+            Node start = new Node(true, simulationContext.Rovers.First(x => x.Id == simulationContext.Construction.UnitId).CurrentPosition);
             var possibleTargetCoordinates = coordinateCalculator.GetAdjacentCoordinates(waterPlace, 32).ToList();
             var randomCor = Random.Next(possibleTargetCoordinates.Count);
             
@@ -229,9 +226,9 @@ public class ExplorationSimulator : IExplorationSimulator
 
             var path = _pathfinder.FindPath(start, target);
             
-            var changeRover = new Rover(simulationContext.Rovers.First(x => x.Id == "MER-B Opportunity-2").Id, target.MapPosition,
-                simulationContext.Rovers.First(x => x.Id == "MER-B Opportunity-2").VisibleTiles, simulationContext.Rovers.First(x => x.Id == "MER-B Opportunity-2").EncounteredResources,
-                Routine.Extracting, "mineral", 1);
+            var changeRover = new Rover(simulationContext.Rovers.First(x => x.Id == simulationContext.Construction.UnitId).Id, target.MapPosition,
+                simulationContext.Rovers.First(x => x.Id == simulationContext.Construction.UnitId).VisibleTiles, simulationContext.Rovers.First(x => x.Id == simulationContext.Construction.UnitId).EncounteredResources,
+                Routine.Extracting, "water", 1);
             
             simulationContext = simulationContext with
             {
@@ -244,11 +241,11 @@ public class ExplorationSimulator : IExplorationSimulator
             
         }
         
-        Node finalPosition = new Node(true, simulationContext.Rovers.First(x => x.Id == "MER-B Opportunity-2").CurrentPosition);
+        Node finalPosition = new Node(true, simulationContext.Rovers.First(x => x.Id == simulationContext.Construction.UnitId).CurrentPosition);
         _pathfinder.FindPath(finalPosition, started);
         
-        var changeRover1 = new Rover(simulationContext.Rovers.First(x => x.Id == "MER-B Opportunity-2").Id, simulationContext.Rovers.First(x => x.Id == "MER-B Opportunity-2").CurrentPosition,
-            simulationContext.Rovers.First(x => x.Id == "MER-B Opportunity-2").VisibleTiles, simulationContext.Rovers.First(x => x.Id == "MER-B Opportunity-2").EncounteredResources,
+        var changeRover1 = new Rover(simulationContext.Rovers.First(x => x.Id == simulationContext.Construction.UnitId).Id, simulationContext.Rovers.First(x => x.Id == simulationContext.Construction.UnitId).CurrentPosition,
+            simulationContext.Rovers.First(x => x.Id == simulationContext.Construction.UnitId).VisibleTiles, simulationContext.Rovers.First(x => x.Id == simulationContext.Construction.UnitId).EncounteredResources,
             Routine.Delivering, "mineral", 2);
         simulationContext = simulationContext with
         {
