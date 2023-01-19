@@ -186,6 +186,7 @@ public class ExplorationSimulator : IExplorationSimulator
                     map.Representation.GetLength(0));
             var mineralCoordinate = adjacentMineralCoords.First(mineral => map.Representation[mineral.X, mineral.Y] == " ");
 
+            _logger.TargetPosition(rover, simulationContext, mineralCoordinate);
             simulationContext = MoveToTarget(simulationContext, task, mineralCoordinate, rover, resourceAmount);
             _logger.Extracting(rover, simulationContext);
             RemoveCollectedFromMap(resource, simulationContext);
