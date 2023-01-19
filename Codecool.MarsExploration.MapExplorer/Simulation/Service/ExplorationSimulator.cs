@@ -92,7 +92,7 @@ public class ExplorationSimulator : IExplorationSimulator
         simulationContext = _builder.Build(simulationContext, "rover");
         
         //Rover2 extracts waters
-        //simulationContext = SecondRoverPath(simulationContext, map, _coordinateCalculator);
+        simulationContext = ExtractResource(simulationContext, map, _coordinateCalculator, Task.WaterGathering);
         
         //END
         DisplayFinish(simulationContext, _logger);
@@ -190,8 +190,59 @@ public class ExplorationSimulator : IExplorationSimulator
             _logger.Extracting(rover, simulationContext);
             RemoveCollectedFromMap(resource, simulationContext);
         }
-    
+
+        simulationContext = DeliverResource(simulationContext, rover);
+        return simulationContext;
+    }
+
+    private SimulationContext DeliverResource(SimulationContext simulationContext,Rover rover)
+    {
+        ExploringRoutine exploringRoutine = new ExploringRoutine(simulationContext);
+        var commandCenterPos = simulationContext.CommandCenters.First().CurrentPosition;
+        var pathToCenter =
+            _pathfinder.FindPath(new Node(true, rover.CurrentPosition), new Node(true, commandCenterPos));
         
+        foreach (var node in pathToCenter)
+        {
+            exploringRoutine.Move(rover, node.MapPosition);
+            simulationContext = simulationContext with
+            {
+                Rovers = new List<Rover>{rover},
+                Step = simulationContext.Step + 1,
+            };
+            _logger.Position(rover, simulationContext);
+        }
+        var updateRover = simulationContext.Rovers.ToList();
+        foreach (var rover1 in updateRover)
+        {
+            if (rover1 == rover)
+            {
+                rover1.CurrentRoutine = Routine.Delivering;
+            }
+        }
+
+        var updateCenter = simulationContext.CommandCenters.ToList();
+        foreach (var commandCenter in updateCenter)
+        {
+            if (commandCenter == simulationContext.CommandCenters.First())
+            {
+                if (rover.Task == Task.MineralMining)
+                {
+                    commandCenter.MineralResources = rover.Progress;
+                }
+
+                if (rover.Task == Task.WaterGathering)
+                {
+                    commandCenter.WaterResources = rover.Progress;
+                }
+            }
+        }
+        
+        simulationContext = simulationContext with
+        {
+            Rovers = updateRover
+        };
+        _logger.Delivering(rover,simulationContext);
         return simulationContext;
     }
     
@@ -202,7 +253,7 @@ public class ExplorationSimulator : IExplorationSimulator
         
         foreach (var node in pathToMineral)
         {
-            exploringRoutine.MoveRover(rover, node.MapPosition);
+            exploringRoutine.Move(rover, node.MapPosition);
             simulationContext = simulationContext with
             {
                 Rovers = new List<Rover>{rover},
