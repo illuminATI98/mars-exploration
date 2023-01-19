@@ -4,5 +4,5 @@ namespace Codecool.MarsExploration.MapExplorer.Pathfinder.Pathfinding;
 
 public interface IPathfinder
 {
-    IEnumerable<Coordinate> FindPath(Coordinate startingPos, Coordinate targetPos);
+    IEnumerable<Node>? FindPath(Node startingPos, Node targetPos);
 }
