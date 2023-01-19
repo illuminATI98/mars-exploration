@@ -79,12 +79,14 @@ public class ExplorationSimulator : IExplorationSimulator
         
         
         //Rover one extracts minerals and gathers them at the command centre Coordinate
-        FirstRoverPath(simulationContext, map, _coordinateCalculator);
+        simulationContext = FirstRoverPath(simulationContext, map, _coordinateCalculator);
         
         //Build the centre
         simulationContext = _builder.Build(simulationContext, "center");
+        
         //Build rover2
         simulationContext = _builder.Build(simulationContext, "rover");
+        
         //Rover2 extracts waters
         SecondRoverPath(simulationContext, map, _coordinateCalculator);
 
@@ -125,6 +127,7 @@ public class ExplorationSimulator : IExplorationSimulator
             {
                 var outcome = results.First(s => s != ExplorationOutcome.InProgress);
                 simulationContext = HandleOutcome(simulationContext, outcome);
+                simulationContext = simulationContext with { Step = simulationContext.Step + 1 };
                 _simulationStepLoggingUi.Run(simulationContext);
             }
 
@@ -146,7 +149,7 @@ public class ExplorationSimulator : IExplorationSimulator
         return simulationContext;
     }
 
-    private void FirstRoverPath(SimulationContext simulationContext, Map map, ICoordinateCalculator coordinateCalculator)
+    private SimulationContext FirstRoverPath(SimulationContext simulationContext, Map map, ICoordinateCalculator coordinateCalculator)
     {
         Node started = new Node(true, simulationContext.Rovers.First().CurrentPosition);
         var mineralPlaces = new Queue<Coordinate>();
@@ -174,7 +177,8 @@ public class ExplorationSimulator : IExplorationSimulator
             
             simulationContext = simulationContext with
             {
-                Rovers = new List<Rover>{changeRover}
+                Rovers = new List<Rover>{changeRover},
+                Step = simulationContext.Step + 1
             };
             
             RemoveCollectedFromMap( mineralPlace, simulationContext);
@@ -182,6 +186,11 @@ public class ExplorationSimulator : IExplorationSimulator
             _simulationStepLoggingUi.Run(simulationContext);
             
         }
+        
+        simulationContext = simulationContext with
+        {
+            Step = simulationContext.Step + 1
+        };
 
         Node finalPosition = new Node(true, simulationContext.Rovers.First().CurrentPosition);
         _pathfinder.FindPath(finalPosition, started);
@@ -195,7 +204,7 @@ public class ExplorationSimulator : IExplorationSimulator
         };
         
         _simulationStepLoggingUi.Run(simulationContext);
-
+        return simulationContext;
     }
 
     private void RemoveCollectedFromMap(Coordinate item, SimulationContext simulationContext)
@@ -232,7 +241,8 @@ public class ExplorationSimulator : IExplorationSimulator
             
             simulationContext = simulationContext with
             {
-                Rovers = new List<Rover>{changeRover}
+                Rovers = new List<Rover>{changeRover},
+                Step = simulationContext.Step + 1
             };
             
             RemoveCollectedFromMap( waterPlace, simulationContext);
@@ -240,6 +250,11 @@ public class ExplorationSimulator : IExplorationSimulator
             _simulationStepLoggingUi.Run(simulationContext);
             
         }
+        
+        simulationContext = simulationContext with
+        {
+            Step = simulationContext.Step + 1
+        };
         
         Node finalPosition = new Node(true, simulationContext.Rovers.First(x => x.Id == simulationContext.Construction.UnitId).CurrentPosition);
         _pathfinder.FindPath(finalPosition, started);
