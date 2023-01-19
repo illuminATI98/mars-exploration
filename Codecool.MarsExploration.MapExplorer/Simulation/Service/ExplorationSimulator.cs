@@ -5,6 +5,8 @@ using Codecool.MarsExploration.MapExplorer.MapLoader;
 using Codecool.MarsExploration.MapExplorer.MarsRover;
 using Codecool.MarsExploration.MapExplorer.MarsRover.Service;
 using Codecool.MarsExploration.MapExplorer.Movement;
+using Codecool.MarsExploration.MapExplorer.Pathfinder;
+using Codecool.MarsExploration.MapExplorer.Pathfinder.Pathfinding;
 using Codecool.MarsExploration.MapExplorer.Simulation.Model;
 using Codecool.MarsExploration.MapExplorer.UI;
 using Codecool.MarsExploration.MapGenerator.Calculators.Model;
@@ -23,11 +25,13 @@ public class ExplorationSimulator : IExplorationSimulator
     private IRoverDeployer _roverDeployer;
     private SimulationStepLoggingUi _simulationStepLoggingUi;
     private IGetLocationOfCommanCentre _getLocationOfCommandCentre;
+    private IPathfinder _pathfinder;
     
 
     public ExplorationSimulator(IMapLoader mapLoader, IConfigurationValidator configurationValidator, IOutcomeAnalyzer lackOfResourcesAnalyzer, 
         IOutcomeAnalyzer succesAnalyzer, IOutcomeAnalyzer timeOutanalyzer, IRoverDeployer roverDeployer, 
-        SimulationStepLoggingUi simulationStepLoggingUi, IGetLocationOfCommanCentre getLocationOfCommandCentre)
+        SimulationStepLoggingUi simulationStepLoggingUi, IGetLocationOfCommanCentre getLocationOfCommandCentre,
+        IPathfinder pathfinder)
     {
         _mapLoader = mapLoader;
         _configurationValidator = configurationValidator;
@@ -37,6 +41,7 @@ public class ExplorationSimulator : IExplorationSimulator
         _roverDeployer = roverDeployer;
         _simulationStepLoggingUi = simulationStepLoggingUi;
         _getLocationOfCommandCentre = getLocationOfCommandCentre;
+        _pathfinder = pathfinder;
     }
 
     public void RunSimulation(Configuration.Configuration configuration)
@@ -50,24 +55,32 @@ public class ExplorationSimulator : IExplorationSimulator
         var rover1 = _roverDeployer.Deploy();
         
         //Rover one begins its exploration routine
-        var simulationContext = new SimulationContext(0, configuration.StepsToTimeOut, new List<Rover>{rover1},null,
+        var simulationContext = new SimulationContext(0, configuration.StepsToTimeOut, new List<Rover>{rover1},null, null,
             landingSpot, map, configuration.SymbolsOfTheResources);
         ExploringRoutine exploringRoutine = new ExploringRoutine(simulationContext);
         
         //Rover one finds a colonisable spot
         while (simulationContext.ExplorationOutcome != ExplorationOutcome.Colonizable)
         {
-            simulationContext = SimulationLoop(new SimulationContext(0, configuration.StepsToTimeOut, new List<Rover>{rover1},null,
+            simulationContext = SimulationLoop(new SimulationContext(0, configuration.StepsToTimeOut, new List<Rover>{rover1},null, null,
                 landingSpot, map, configuration.SymbolsOfTheResources), exploringRoutine);
         }
 
         var colonizableSpot = simulationContext.Rovers.First().CurrentPosition;
         
-        //Choose the location of the command centre 
-        var commandCentre = _getLocationOfCommandCentre.GetCentreLocation(colonizableSpot, simulationContext);
-        Console.WriteLine(commandCentre.CurrentPosition);
+        //Choose the location of the command centre and init 
+        simulationContext = InitCommandCentre(colonizableSpot, simulationContext);
+        _simulationStepLoggingUi.Run(simulationContext);
         
-        //Rover one extracts minerals and gathers them at the chosen command centre Coordinate
+        //Rover one extracts minerals and gathers them at the command centre Coordinate
+        FirstRoverPath(simulationContext.Rovers.First().CurrentPosition);
+
+        //Build the centre
+
+
+        //Build rover2
+
+        //Rover2 extracts waters
 
 
     }
@@ -94,7 +107,7 @@ public class ExplorationSimulator : IExplorationSimulator
         while (simulationContext.ExplorationOutcome == ExplorationOutcome.InProgress &&
                simulationContext.StepsToReachTimeOut >= step)
         {
-            _simulationStepLoggingUi.Run(simulationContext, step);
+            _simulationStepLoggingUi.Run(simulationContext);
             exploringRoutine.Step(simulationContext.Rovers.First());
             var results = new[]
             {
@@ -106,12 +119,35 @@ public class ExplorationSimulator : IExplorationSimulator
             {
                 var outcome = results.First(s => s != ExplorationOutcome.InProgress);
                 simulationContext = HandleOutcome(simulationContext, outcome);
-                _simulationStepLoggingUi.Run(simulationContext, step);
+                _simulationStepLoggingUi.Run(simulationContext);
             }
 
+            simulationContext = simulationContext with { Step = simulationContext.Step + 1 };
             step++;
         }
 
         return simulationContext;
+    }
+
+    private SimulationContext InitCommandCentre(Coordinate spot, SimulationContext simulationContext)
+    {
+        var commandCentre = _getLocationOfCommandCentre.GetCentreLocation(spot, simulationContext);
+        simulationContext = simulationContext with
+        {
+            CommandCenters = new List<CommandCenter.Model.CommandCenter> { commandCentre },
+            ExplorationOutcome = ExplorationOutcome.InProgress
+        };
+        return simulationContext;
+    }
+
+    private void FirstRoverPath(Coordinate position)
+    {
+        Node start = new Node(true, position);
+        Node target = new Node(true, position);
+        var path = _pathfinder.FindPath(start, target);
+        foreach (var node in path)
+        {
+            Console.WriteLine(node);
+        }
     }
 }
