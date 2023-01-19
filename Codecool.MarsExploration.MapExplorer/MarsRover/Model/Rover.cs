@@ -9,12 +9,12 @@ public class Rover
     public IEnumerable<Coordinate> VisibleTiles { get; set; }
     public IEnumerable<Coordinate> EncounteredResources { get; set; }
     public Routine CurrentRoutine { get; set; }
-    
+    public Task Task { get; set; }
     public string Resource { get; set; }
-    
+    public int ResourcesToMine { get; set; }
     public int Progress { get; set; }
 
-    public Rover(string id, Coordinate currentPosition, IEnumerable<Coordinate> visibleTiles, IEnumerable<Coordinate> encounteredResources, Routine currentRoutine, string resource, int progress)
+    public Rover(string id, Coordinate currentPosition, IEnumerable<Coordinate> visibleTiles, IEnumerable<Coordinate> encounteredResources, Routine currentRoutine, string resource, int progress, Task task, int resourcesToMine)
     {
         Id = id;
         CurrentPosition = currentPosition;
@@ -23,5 +23,7 @@ public class Rover
         CurrentRoutine = currentRoutine;
         Resource = resource;
         Progress = progress;
+        Task = task;
+        ResourcesToMine = resourcesToMine;
     }
 }
