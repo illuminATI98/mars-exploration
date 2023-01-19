@@ -1,5 +1,6 @@
 ﻿using Codecool.MarsExploration.MapExplorer.Analyzer;
 using Codecool.MarsExploration.MapExplorer.Configuration.Service;
+using Codecool.MarsExploration.MapExplorer.Construction.Service;
 using Codecool.MarsExploration.MapExplorer.Logger;
 using Codecool.MarsExploration.MapExplorer.MapLoader;
 using Codecool.MarsExploration.MapExplorer.MarsRover;
@@ -40,8 +41,9 @@ class Program
         ICostCalculator costCalculator = new CostCalculator();
         IPathfinder pathfinder = new Pathfinder.Pathfinding.Pathfinder(coordinateCalculator,
             mapLoader.Load(mapFile).Representation, costCalculator);
+        IBuilder builder = new Builder(logger); 
 
-        IExplorationSimulator explorationSimulator = new ExplorationSimulator(mapLoader, configurationValidator, lackOfResourcesAnalyzer,successAnalyzer,timeOutAnalyzer,roverDeployer, simulationStepLoggingUi, getLocationOfCommanCentre, pathfinder, coordinateCalculator);
+        IExplorationSimulator explorationSimulator = new ExplorationSimulator(mapLoader, configurationValidator, lackOfResourcesAnalyzer,successAnalyzer,timeOutAnalyzer,roverDeployer, simulationStepLoggingUi, getLocationOfCommanCentre, pathfinder, coordinateCalculator,builder);
         
         explorationSimulator.RunSimulation(configObject);
     }
