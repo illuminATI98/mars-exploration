@@ -22,7 +22,7 @@ public class ConsoleLogger : ILogger
 
     public void Delivering(Rover rover, SimulationContext simulationContext)
     {
-        Console.WriteLine($"STEP {simulationContext.Step}; EVENT delivery; UNIT {rover.Id}; RESOURCE {rover.Resource}; PROGRESS {rover.Progress}");
+        Console.WriteLine($"\nSTEP {simulationContext.Step}; EVENT delivery; UNIT {rover.Id}; RESOURCE {rover.Resource}; TO {simulationContext.CommandCenters.First().Id}\n");
     }
 
     public void Position(CommandCenter.Model.CommandCenter commandCenter,SimulationContext simulationContext)
@@ -47,7 +47,7 @@ public class ConsoleLogger : ILogger
              Console.Write($"{rover.Id} ");
         }
         
-        Console.Write($"MINERALS: {simulationContext.CommandCenters.First().MineralResources.Count}; ");
-        Console.Write($"WATERS: {simulationContext.CommandCenters.First().WaterResources.Count};");
+        Console.Write($"MINERALS: {simulationContext.CommandCenters.First().MineralResources}; ");
+        Console.Write($"WATERS: {simulationContext.CommandCenters.First().WaterResources};");
     }
 }
