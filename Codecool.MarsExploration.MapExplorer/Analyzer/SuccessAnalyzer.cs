@@ -10,7 +10,7 @@ public class SuccessAnalyzer : IOutcomeAnalyzer
     
     public ExplorationOutcome Analyze(SimulationContext simulationContext, int step)
     {
-        var encounteredCoordinates = simulationContext.Rover.EncounteredResources;
+        var encounteredCoordinates = simulationContext.Rovers.First().EncounteredResources;
         var map = simulationContext.Map.Representation;
         var minerals = new List<string?>();
         var waters = new List<string?>();

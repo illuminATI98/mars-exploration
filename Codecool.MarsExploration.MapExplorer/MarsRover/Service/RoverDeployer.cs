@@ -37,7 +37,7 @@ public class RoverDeployer : IRoverDeployer
             }
         }
 
-        return new Rover($"MER-B Opportunity-{count += 1}", GetTargetCoordinate(adjacentCoordinates), visibleTiles ,encounteredResources);
+        return new Rover($"MER-B Opportunity-{count += 1}", GetTargetCoordinate(adjacentCoordinates), visibleTiles ,encounteredResources, Routine.Exploring);
     }
     
     private Coordinate GetTargetCoordinate(List<Coordinate> coordinates)
