@@ -15,6 +15,7 @@ using Codecool.MarsExploration.MapExplorer.UI;
 using Codecool.MarsExploration.MapGenerator.Calculators.Model;
 using Codecool.MarsExploration.MapGenerator.Calculators.Service;
 using Codecool.MarsExploration.MapGenerator.MapElements.Model;
+using Task = Codecool.MarsExploration.MapExplorer.MarsRover.Task;
 
 namespace Codecool.MarsExploration.MapExplorer.Simulation.Service;
 
@@ -81,9 +82,8 @@ public class ExplorationSimulator : IExplorationSimulator
         //Choose the location of the command centre and init 
         simulationContext = InitCommandCentre(colonizableSpot, simulationContext);
         
-        
-        //Rover one extracts minerals and gathers them at the command centre Coordinate
-        simulationContext = FirstRoverPath(simulationContext, map, _coordinateCalculator);
+        //Extract mineral
+        simulationContext = ExtractResource(simulationContext, map, _coordinateCalculator, Task.MineralMining);
         
         //Build the centre
         simulationContext = _builder.Build(simulationContext, "center");
@@ -92,7 +92,7 @@ public class ExplorationSimulator : IExplorationSimulator
         simulationContext = _builder.Build(simulationContext, "rover");
         
         //Rover2 extracts waters
-        simulationContext = SecondRoverPath(simulationContext, map, _coordinateCalculator);
+        //simulationContext = SecondRoverPath(simulationContext, map, _coordinateCalculator);
         
         //END
         DisplayFinish(simulationContext, _logger);
@@ -154,12 +154,12 @@ public class ExplorationSimulator : IExplorationSimulator
         return simulationContext;
     }
 
-    private List<Coordinate> CollectedMinerals(SimulationContext simulationContext, Map map)
+    private List<Coordinate> CollectedResource(SimulationContext simulationContext, Map map, string resource)
     {
         var mineralPlaces = new List<Coordinate>();
         foreach (var encounteredResource in simulationContext.Rovers.First().EncounteredResources)
         {
-            if (map.Representation[encounteredResource.X, encounteredResource.Y] == "%")
+            if (map.Representation[encounteredResource.X, encounteredResource.Y] == resource)
             {
                 mineralPlaces.Add(encounteredResource);
             }
@@ -168,59 +168,67 @@ public class ExplorationSimulator : IExplorationSimulator
         return mineralPlaces;
     }
 
-    private SimulationContext FirstRoverPath(SimulationContext simulationContext, Map map, ICoordinateCalculator coordinateCalculator)
+    private SimulationContext ExtractResource(SimulationContext simulationContext, Map map,ICoordinateCalculator coordinateCalculator ,Task task)
     {
-        Node started = new Node(true, simulationContext.Rovers.First().CurrentPosition);
-        var mineralPlaces = CollectedMinerals(simulationContext, map);
-
-        foreach (var mineralPlace in mineralPlaces)
+        
+        var miningRovers = simulationContext.Rovers.Where(rover => rover.Task == task);
+        var rover = miningRovers.First();
+        
+        var resources = CollectedResource(simulationContext, map, task == Task.MineralMining ? "%" : "*");
+        var resourceAmount = resources.Count;
+        while (resources.Count > 0)
         {
-             Node start = new Node(true, simulationContext.Rovers.First().CurrentPosition);
-            var possibleTargetCoordinates = coordinateCalculator.GetAdjacentCoordinates(mineralPlace, 32).ToList();
-            var randomCor = Random.Next(possibleTargetCoordinates.Count);
+            var resource = resources[Random.Next(0, resources.Count)];
+            resources.Remove(resource);
             
-            Node target = new Node(true, possibleTargetCoordinates[randomCor]);
+            var adjacentMineralCoords =
+                coordinateCalculator.GetAdjacentCoordinates(resource,
+                    map.Representation.GetLength(0));
+            var mineralCoordinate = adjacentMineralCoords.First(mineral => map.Representation[mineral.X, mineral.Y] == " ");
 
-            var path = _pathfinder.FindPath(start, target);
-            
-            var changeRover = new Rover(simulationContext.Rovers.First().Id, target.MapPosition,
-                simulationContext.Rovers.First().VisibleTiles, simulationContext.Rovers.First().EncounteredResources,
-                Routine.Extracting, "mineral", 1);
-
-            var updatedCentre = new CommandCenter.Model.CommandCenter(simulationContext.CommandCenters.First().Id,
-                simulationContext.CommandCenters.First().CurrentPosition,
-                simulationContext.CommandCenters.First().Radius, Status.Expanding, null, mineralPlaces);
-            
+            simulationContext = MoveToTarget(simulationContext, task, mineralCoordinate, rover, resourceAmount);
+            _logger.Extracting(rover, simulationContext);
+            RemoveCollectedFromMap(resource, simulationContext);
+        }
+    
+        
+        return simulationContext;
+    }
+    
+    private SimulationContext MoveToTarget(SimulationContext simulationContext, Task task, Coordinate coordinate, Rover rover, int maxMinerals)
+    {
+        ExploringRoutine exploringRoutine = new ExploringRoutine(simulationContext);
+        var pathToMineral = _pathfinder.FindPath(new Node(true, rover.CurrentPosition), new Node(true, coordinate));
+        
+        foreach (var node in pathToMineral)
+        {
+            exploringRoutine.MoveRover(rover, node.MapPosition);
             simulationContext = simulationContext with
             {
-                Rovers = new List<Rover>{changeRover},
+                Rovers = new List<Rover>{rover},
                 Step = simulationContext.Step + 1,
-                CommandCenters = new List<CommandCenter.Model.CommandCenter>{updatedCentre}
             };
-            
-            RemoveCollectedFromMap( mineralPlace, simulationContext);
-            
-            _simulationStepLoggingUi.Run(simulationContext);
-            
+            _logger.Position(rover, simulationContext);
+        }
+
+        var updateRover = simulationContext.Rovers.ToList();
+        
+        foreach (var rover1 in updateRover)
+        {
+            if (rover1 == rover)
+            {
+                rover1.CurrentRoutine = Routine.Extracting;
+                rover1.Resource = task == Task.MineralMining ? "MINERAL" : "WATER";
+                rover1.Progress++;
+                rover1.ResourcesToMine = maxMinerals;
+            }
         }
         
         simulationContext = simulationContext with
         {
-            Step = simulationContext.Step + 1
-        };
-
-        Node finalPosition = new Node(true, simulationContext.Rovers.First().CurrentPosition);
-        _pathfinder.FindPath(finalPosition, started);
-        
-        var changeRover1 = new Rover(simulationContext.Rovers.First().Id, simulationContext.Rovers.First().CurrentPosition,
-            simulationContext.Rovers.First().VisibleTiles, simulationContext.Rovers.First().EncounteredResources,
-            Routine.Delivering, "mineral", 2);
-        simulationContext = simulationContext with
-        {
-            Rovers = new List<Rover>{changeRover1}
+            Rovers = updateRover
         };
         
-        _simulationStepLoggingUi.Run(simulationContext);
         return simulationContext;
     }
 
@@ -229,86 +237,72 @@ public class ExplorationSimulator : IExplorationSimulator
         simulationContext.Map.Representation[item.X, item.Y] = " ";
     }
 
-    private List<Coordinate> CollectedWaters(SimulationContext simulationContext, Map map)
-    {
-        var waterPlaces = new List<Coordinate>();
-        foreach (var encounteredResource in simulationContext.Rovers.First().EncounteredResources)
-        {
-            if (map.Representation[encounteredResource.X, encounteredResource.Y] == "*")
-            {
-                waterPlaces.Add(encounteredResource);
-            }
-        }
-
-        return waterPlaces;
-    }
-
-    private SimulationContext SecondRoverPath(SimulationContext simulationContext, Map map,
-        ICoordinateCalculator coordinateCalculator)
-    {
-        var firstRover = simulationContext.Rovers.First();
-        var secondRover = simulationContext.Rovers.First(x => x.Id == simulationContext.Construction.UnitId);
-        
-        Node started = new Node(true, secondRover.CurrentPosition);
-        var waterPlaces = CollectedWaters(simulationContext, map);
-        
-        foreach (var waterPlace in waterPlaces)
-        {
-            Node start = new Node(true, simulationContext.Rovers.First(x => x.Id == simulationContext.Construction.UnitId).CurrentPosition);
-            var possibleTargetCoordinates = coordinateCalculator.GetAdjacentCoordinates(waterPlace, 32).ToList();
-            var randomCor = Random.Next(possibleTargetCoordinates.Count);
-            
-            Node target = new Node(true, possibleTargetCoordinates[randomCor]);
-
-            var path = _pathfinder.FindPath(start, target);
-
-            var changeRover = new Rover(simulationContext.Rovers.First(x => x.Id == simulationContext.Construction.UnitId).Id, target.MapPosition,
-                simulationContext.Rovers.First(x => x.Id == simulationContext.Construction.UnitId).VisibleTiles, simulationContext.Rovers.First(x => x.Id == simulationContext.Construction.UnitId).EncounteredResources,
-                Routine.Extracting, "water", 1);
-            
-            var updatedCentre = new CommandCenter.Model.CommandCenter(simulationContext.CommandCenters.First().Id,
-                simulationContext.CommandCenters.First().CurrentPosition,
-                simulationContext.CommandCenters.First().Radius, Status.Expanding, waterPlaces,
-                simulationContext.CommandCenters.First().MineralResources);
-
-            simulationContext = simulationContext with
-            {
-                Rovers = new List<Rover>{changeRover},
-                Step = simulationContext.Step + 1,
-                CommandCenters = new List<CommandCenter.Model.CommandCenter>{updatedCentre}
-            };
-            
-            RemoveCollectedFromMap( waterPlace, simulationContext);
-            
-            _simulationStepLoggingUi.Run(simulationContext);
-            
-        }
-        
-        simulationContext = simulationContext with
-        {
-            Step = simulationContext.Step + 1
-        };
-        
-        Node finalPosition = new Node(true, simulationContext.Rovers.First(x => x.Id == simulationContext.Construction.UnitId).CurrentPosition);
-        _pathfinder.FindPath(finalPosition, started);
-        
-        var changeRover2 = new Rover(simulationContext.Rovers.First(x => x.Id == simulationContext.Construction.UnitId).Id, simulationContext.Rovers.First(x => x.Id == simulationContext.Construction.UnitId).CurrentPosition,
-            simulationContext.Rovers.First(x => x.Id == simulationContext.Construction.UnitId).VisibleTiles, simulationContext.Rovers.First(x => x.Id == simulationContext.Construction.UnitId).EncounteredResources,
-            Routine.Delivering, "water", 2);
-        
-        simulationContext = simulationContext with
-        {
-            Rovers = new List<Rover>{changeRover2},
-            Step = simulationContext.Step + 1
-        };
-
-        _simulationStepLoggingUi.Run(simulationContext);
-        simulationContext = simulationContext with
-        {
-            Rovers = new List<Rover>{firstRover, changeRover2}
-        };
-        return simulationContext;
-    }
+    // private SimulationContext SecondRoverPath(SimulationContext simulationContext, Map map,
+    //     ICoordinateCalculator coordinateCalculator)
+    // {
+    //     // var firstRover = simulationContext.Rovers.First();
+    //     // var secondRover = simulationContext.Rovers.First(x => x.Id == simulationContext.Construction.UnitId);
+    //     //
+    //     // Node started = new Node(true, secondRover.CurrentPosition);
+    //     // var waterPlaces = CollectedWaters(simulationContext, map);
+    //     //
+    //     // foreach (var waterPlace in waterPlaces)
+    //     // {
+    //     //     Node start = new Node(true, simulationContext.Rovers.First(x => x.Id == simulationContext.Construction.UnitId).CurrentPosition);
+    //     //     var possibleTargetCoordinates = coordinateCalculator.GetAdjacentCoordinates(waterPlace, 32).ToList();
+    //     //     var randomCor = Random.Next(possibleTargetCoordinates.Count);
+    //     //     
+    //     //     Node target = new Node(true, possibleTargetCoordinates[randomCor]);
+    //     //
+    //     //     var path = _pathfinder.FindPath(start, target);
+    //     //
+    //     //     var changeRover = new Rover(simulationContext.Rovers.First(x => x.Id == simulationContext.Construction.UnitId).Id, target.MapPosition,
+    //     //         simulationContext.Rovers.First(x => x.Id == simulationContext.Construction.UnitId).VisibleTiles, simulationContext.Rovers.First(x => x.Id == simulationContext.Construction.UnitId).EncounteredResources,
+    //     //         Routine.Extracting, "water", 1);
+    //     //     
+    //     //     var updatedCentre = new CommandCenter.Model.CommandCenter(simulationContext.CommandCenters.First().Id,
+    //     //         simulationContext.CommandCenters.First().CurrentPosition,
+    //     //         simulationContext.CommandCenters.First().Radius, Status.Expanding, waterPlaces,
+    //     //         simulationContext.CommandCenters.First().MineralResources);
+    //     //
+    //     //     simulationContext = simulationContext with
+    //     //     {
+    //     //         Rovers = new List<Rover>{changeRover},
+    //     //         Step = simulationContext.Step + 1,
+    //     //         CommandCenters = new List<CommandCenter.Model.CommandCenter>{updatedCentre}
+    //     //     };
+    //     //     
+    //     //     RemoveCollectedFromMap( waterPlace, simulationContext);
+    //     //     
+    //     //     _simulationStepLoggingUi.Run(simulationContext);
+    //         
+    //     //}
+    //     
+    //     simulationContext = simulationContext with
+    //     {
+    //         Step = simulationContext.Step + 1
+    //     };
+    //     
+    //     Node finalPosition = new Node(true, simulationContext.Rovers.First(x => x.Id == simulationContext.Construction.UnitId).CurrentPosition);
+    //     _pathfinder.FindPath(finalPosition, started);
+    //     
+    //     var changeRover2 = new Rover(simulationContext.Rovers.First(x => x.Id == simulationContext.Construction.UnitId).Id, simulationContext.Rovers.First(x => x.Id == simulationContext.Construction.UnitId).CurrentPosition,
+    //         simulationContext.Rovers.First(x => x.Id == simulationContext.Construction.UnitId).VisibleTiles, simulationContext.Rovers.First(x => x.Id == simulationContext.Construction.UnitId).EncounteredResources,
+    //         Routine.Delivering, "water", 2);
+    //     
+    //     simulationContext = simulationContext with
+    //     {
+    //         Rovers = new List<Rover>{changeRover2},
+    //         Step = simulationContext.Step + 1
+    //     };
+    //
+    //     _simulationStepLoggingUi.Run(simulationContext);
+    //     simulationContext = simulationContext with
+    //     {
+    //         Rovers = new List<Rover>{firstRover, changeRover2}
+    //     };
+    //     return simulationContext;
+    // }
 
     private void DisplayFinish(SimulationContext simulationContext, ILogger logger)
     {
