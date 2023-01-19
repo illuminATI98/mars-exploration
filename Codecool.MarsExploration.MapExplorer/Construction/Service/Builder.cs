@@ -4,6 +4,7 @@ using Codecool.MarsExploration.MapExplorer.CommandCenter.Model;
 using Codecool.MarsExploration.MapExplorer.Logger;
 using Codecool.MarsExploration.MapExplorer.MarsRover;
 using Codecool.MarsExploration.MapExplorer.Simulation.Model;
+using Task = Codecool.MarsExploration.MapExplorer.MarsRover.Task;
 
 namespace Codecool.MarsExploration.MapExplorer.Construction.Service;
 
@@ -72,10 +73,9 @@ public class Builder : IBuilder
                 {
                     Step = simulationContext.Step + 1
                 };
-                _logger.Construction(simulationContext);
             }
 
-            var newRover = new Rover(construction.UnitId, construction.Position, null, null, Routine.Exploring, null, 0);
+            var newRover = new Rover(construction.UnitId, construction.Position, null, null, Routine.Exploring, null, 0, Task.WaterGathering,0);
             var rovers = simulationContext.Rovers.ToList();
             rovers.Add(newRover);
             simulationContext = simulationContext with
