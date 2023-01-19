@@ -12,26 +12,26 @@ public class ConsoleLogger : ILogger
     }
     public void Position(Rover rover,SimulationContext simulationContext)
     {
-        if (rover.CurrentRoutine == Routine.Extracting)
-        {
-            Console.WriteLine($"STEP {simulationContext.Step}; EVENT extraction; UNIT {rover.Id}; RESOURCE {rover.Resource}; PROGRESS {rover.Progress}");
-        }
-        else if (rover.CurrentRoutine == Routine.Delivering)
-        {
-            Console.WriteLine($"STEP {simulationContext.Step}; EVENT delivery; UNIT {rover.Id}; RESOURCE {rover.Resource}; PROGRESS {rover.Progress}");
-        }
-        else
-        {
-            Console.WriteLine($"STEP {simulationContext.Step}; EVENT position; UNIT {rover.Id};POSITION [{rover.CurrentPosition.X},{rover.CurrentPosition.Y}]");
-        }
+        Console.WriteLine($"STEP {simulationContext.Step}; EVENT position; UNIT {rover.Id};POSITION [{rover.CurrentPosition.X},{rover.CurrentPosition.Y}]");
     }
+
+    public void Extracting(Rover rover, SimulationContext simulationContext)
+    {
+        Console.WriteLine($"\nSTEP {simulationContext.Step}; EVENT extraction; UNIT {rover.Id}; RESOURCE {rover.Resource}; PROGRESS {rover.Progress}/{rover.ResourcesToMine}\n");
+    }
+
+    public void Delivering(Rover rover, SimulationContext simulationContext)
+    {
+        Console.WriteLine($"STEP {simulationContext.Step}; EVENT delivery; UNIT {rover.Id}; RESOURCE {rover.Resource}; PROGRESS {rover.Progress}");
+    }
+
     public void Position(CommandCenter.Model.CommandCenter commandCenter,SimulationContext simulationContext)
     {
         Console.WriteLine($"STEP {simulationContext.Step}; EVENT position; UNIT {commandCenter.Id};POSITION [{commandCenter.CurrentPosition.X},{commandCenter.CurrentPosition.Y}]");
     }
     public void OutCome(SimulationContext simulationContext)
     {
-        Console.WriteLine($"STEP {simulationContext.Step}; EVENT outcome; OUTCOME {simulationContext.ExplorationOutcome}");
+        Console.WriteLine($"\nSTEP {simulationContext.Step}; EVENT outcome; OUTCOME {simulationContext.ExplorationOutcome}\n");
     }
     public void Construction(SimulationContext simulationContext)
     {
