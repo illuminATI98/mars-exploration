@@ -24,11 +24,16 @@ public class SimulationStepLoggingUi
                     _logger.Step(simulationContext);
                     _logger.Position(rover);
                 }
-                foreach (var construction in simulationContext.Constructions)
+
+                if (simulationContext.Constructions != null)
                 {
-                    _logger.Step(simulationContext);
-                    _logger.Construction(construction);
+                    foreach (var construction in simulationContext.Constructions)
+                    {
+                        _logger.Step(simulationContext);
+                        _logger.Construction(construction);
+                    }  
                 }
+                
                 break;
             case ExplorationOutcome.Colonizable:
                 _logger.Step(simulationContext);

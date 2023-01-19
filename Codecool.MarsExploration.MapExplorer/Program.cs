@@ -5,6 +5,8 @@ using Codecool.MarsExploration.MapExplorer.MapLoader;
 using Codecool.MarsExploration.MapExplorer.MarsRover;
 using Codecool.MarsExploration.MapExplorer.MarsRover.Service;
 using Codecool.MarsExploration.MapExplorer.Movement;
+using Codecool.MarsExploration.MapExplorer.Pathfinder;
+using Codecool.MarsExploration.MapExplorer.Pathfinder.Pathfinding;
 using Codecool.MarsExploration.MapExplorer.Simulation.Service;
 using Codecool.MarsExploration.MapExplorer.UI;
 using Codecool.MarsExploration.MapGenerator.Calculators.Model;
@@ -35,8 +37,11 @@ class Program
         ILogger logger = new ConsoleLogger();
         SimulationStepLoggingUi simulationStepLoggingUi = new SimulationStepLoggingUi(logger);
         IGetLocationOfCommanCentre getLocationOfCommanCentre = new GetLocationOfCommandCentre(coordinateCalculator,configObject,mapLoader);
+        ICostCalculator costCalculator = new CostCalculator();
+        IPathfinder pathfinder = new Pathfinder.Pathfinding.Pathfinder(coordinateCalculator,
+            mapLoader.Load(mapFile).Representation, costCalculator);
 
-        IExplorationSimulator explorationSimulator = new ExplorationSimulator(mapLoader, configurationValidator, lackOfResourcesAnalyzer,successAnalyzer,timeOutAnalyzer,roverDeployer, simulationStepLoggingUi, getLocationOfCommanCentre);
+        IExplorationSimulator explorationSimulator = new ExplorationSimulator(mapLoader, configurationValidator, lackOfResourcesAnalyzer,successAnalyzer,timeOutAnalyzer,roverDeployer, simulationStepLoggingUi, getLocationOfCommanCentre, pathfinder);
         
         explorationSimulator.RunSimulation(configObject);
     }
