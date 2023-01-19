@@ -78,13 +78,11 @@ public class ExplorationSimulator : IExplorationSimulator
         //Rover one extracts minerals and gathers them at the command centre Coordinate
         FirstRoverPath(simulationContext, map, _coordinateCalculator);
 
-        //Build the centre
-
-
-        //Build rover2
+        //Build the centre and build rover2
+        
 
         //Rover2 extracts waters
-
+        SecondRoverPath(simulationContext, map, _coordinateCalculator);
 
     }
     
@@ -154,12 +152,7 @@ public class ExplorationSimulator : IExplorationSimulator
                 mineralPlaces.Enqueue(encounteredResource);
             }
         }
-        foreach (var mineralPlace in mineralPlaces)
-        {
-            Console.WriteLine($"MINERAL PLACE: {mineralPlace}");
-            
-        }
-        
+
         foreach (var mineralPlace in mineralPlaces)
         {
              Node start = new Node(true, simulationContext.Rovers.First().CurrentPosition);
@@ -172,29 +165,88 @@ public class ExplorationSimulator : IExplorationSimulator
             
             var changeRover = new Rover(simulationContext.Rovers.First().Id, target.MapPosition,
                 simulationContext.Rovers.First().VisibleTiles, simulationContext.Rovers.First().EncounteredResources,
-                Routine.Extracting);
+                Routine.Extracting, "mineral", 1);
             
             simulationContext = simulationContext with
             {
                 Rovers = new List<Rover>{changeRover}
             };
             
-            RemoveCollectedMineralFromMap( mineralPlace, simulationContext);
+            RemoveCollectedFromMap( mineralPlace, simulationContext);
             
-            foreach (var node in path)
-            {
-                Console.WriteLine(node.MapPosition);
-            }
-
+            _simulationStepLoggingUi.Run(simulationContext);
+            
         }
 
         Node finalPosition = new Node(true, simulationContext.Rovers.First().CurrentPosition);
         _pathfinder.FindPath(finalPosition, started);
+        
+        var changeRover1 = new Rover(simulationContext.Rovers.First().Id, simulationContext.Rovers.First().CurrentPosition,
+            simulationContext.Rovers.First().VisibleTiles, simulationContext.Rovers.First().EncounteredResources,
+            Routine.Delivering, "mineral", 2);
+        simulationContext = simulationContext with
+        {
+            Rovers = new List<Rover>{changeRover1}
+        };
+        
+        _simulationStepLoggingUi.Run(simulationContext);
 
     }
 
-    private void RemoveCollectedMineralFromMap(Coordinate mineral, SimulationContext simulationContext)
+    private void RemoveCollectedFromMap(Coordinate item, SimulationContext simulationContext)
     {
-        simulationContext.Map.Representation[mineral.X, mineral.Y] = " ";
+        simulationContext.Map.Representation[item.X, item.Y] = " ";
+    }
+
+    private void SecondRoverPath(SimulationContext simulationContext, Map map,
+        ICoordinateCalculator coordinateCalculator)
+    {
+        Node started = new Node(true, simulationContext.Rovers.First(x => x.Id == "MER-B Opportunity-2").CurrentPosition);
+        var waterPlaces = new List<Coordinate>();
+        foreach (var encounteredResource in simulationContext.Rovers.First(x => x.Id == "MER-B Opportunity-2").EncounteredResources)
+        {
+            if (map.Representation[encounteredResource.X, encounteredResource.Y] == "*")
+            {
+                waterPlaces.Add(encounteredResource);
+            }
+        }
+        
+        foreach (var waterPlace in waterPlaces)
+        {
+            Node start = new Node(true, simulationContext.Rovers.First(x => x.Id == "MER-B Opportunity-2").CurrentPosition);
+            var possibleTargetCoordinates = coordinateCalculator.GetAdjacentCoordinates(waterPlace, 32).ToList();
+            var randomCor = Random.Next(possibleTargetCoordinates.Count);
+            
+            Node target = new Node(true, possibleTargetCoordinates[randomCor]);
+
+            var path = _pathfinder.FindPath(start, target);
+            
+            var changeRover = new Rover(simulationContext.Rovers.First(x => x.Id == "MER-B Opportunity-2").Id, target.MapPosition,
+                simulationContext.Rovers.First(x => x.Id == "MER-B Opportunity-2").VisibleTiles, simulationContext.Rovers.First(x => x.Id == "MER-B Opportunity-2").EncounteredResources,
+                Routine.Extracting, "mineral", 1);
+            
+            simulationContext = simulationContext with
+            {
+                Rovers = new List<Rover>{changeRover}
+            };
+            
+            RemoveCollectedFromMap( waterPlace, simulationContext);
+            
+            _simulationStepLoggingUi.Run(simulationContext);
+            
+        }
+        
+        Node finalPosition = new Node(true, simulationContext.Rovers.First(x => x.Id == "MER-B Opportunity-2").CurrentPosition);
+        _pathfinder.FindPath(finalPosition, started);
+        
+        var changeRover1 = new Rover(simulationContext.Rovers.First(x => x.Id == "MER-B Opportunity-2").Id, simulationContext.Rovers.First(x => x.Id == "MER-B Opportunity-2").CurrentPosition,
+            simulationContext.Rovers.First(x => x.Id == "MER-B Opportunity-2").VisibleTiles, simulationContext.Rovers.First(x => x.Id == "MER-B Opportunity-2").EncounteredResources,
+            Routine.Delivering, "mineral", 2);
+        simulationContext = simulationContext with
+        {
+            Rovers = new List<Rover>{changeRover1}
+        };
+        
+        _simulationStepLoggingUi.Run(simulationContext);
     }
 }
