@@ -1,5 +1,6 @@
 ﻿using Codecool.MarsExploration.MapExplorer.Analyzer;
 using Codecool.MarsExploration.MapExplorer.Configuration.Service;
+using Codecool.MarsExploration.MapExplorer.Construction.Service;
 using Codecool.MarsExploration.MapExplorer.Exploration;
 using Codecool.MarsExploration.MapExplorer.MapLoader;
 using Codecool.MarsExploration.MapExplorer.MarsRover;
@@ -28,12 +29,13 @@ public class ExplorationSimulator : IExplorationSimulator
     private IGetLocationOfCommanCentre _getLocationOfCommandCentre;
     private IPathfinder _pathfinder;
     private ICoordinateCalculator _coordinateCalculator;
+    private IBuilder _builder;
     
 
     public ExplorationSimulator(IMapLoader mapLoader, IConfigurationValidator configurationValidator, IOutcomeAnalyzer lackOfResourcesAnalyzer, 
         IOutcomeAnalyzer succesAnalyzer, IOutcomeAnalyzer timeOutanalyzer, IRoverDeployer roverDeployer, 
         SimulationStepLoggingUi simulationStepLoggingUi, IGetLocationOfCommanCentre getLocationOfCommandCentre,
-        IPathfinder pathfinder, ICoordinateCalculator coordinateCalculator)
+        IPathfinder pathfinder, ICoordinateCalculator coordinateCalculator,IBuilder builder)
     {
         _mapLoader = mapLoader;
         _configurationValidator = configurationValidator;
@@ -45,6 +47,7 @@ public class ExplorationSimulator : IExplorationSimulator
         _getLocationOfCommandCentre = getLocationOfCommandCentre;
         _pathfinder = pathfinder;
         _coordinateCalculator = coordinateCalculator;
+        _builder = builder;
     }
 
     public void RunSimulation(Configuration.Configuration configuration)
@@ -76,13 +79,18 @@ public class ExplorationSimulator : IExplorationSimulator
         
         
         //Rover one extracts minerals and gathers them at the command centre Coordinate
-        FirstRoverPath(simulationContext, map, _coordinateCalculator);
-
-        //Build the centre and build rover2
+        //FirstRoverPath(simulationContext, map, _coordinateCalculator);
         
-
+        //Build the centre
+        simulationContext = _builder.Build(simulationContext, "center");
+        //Build rover2
+        simulationContext = _builder.Build(simulationContext, "rover");
         //Rover2 extracts waters
-        SecondRoverPath(simulationContext, map, _coordinateCalculator);
+        foreach (var simulationContextRover in simulationContext.Rovers)
+        {
+            Console.WriteLine(simulationContextRover.Id);
+        }
+
 
     }
     

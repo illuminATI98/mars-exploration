@@ -5,5 +5,5 @@ namespace Codecool.MarsExploration.MapExplorer.Construction.Service;
 
 public interface IBuilder
 {
-    SimulationContext Build(SimulationContext simulationContext,Model.Construction construction);
+    SimulationContext Build(SimulationContext simulationContext,string unit);
 }
