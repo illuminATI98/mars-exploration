@@ -37,7 +37,7 @@ public class GetLocationOfCommandCentre : IGetLocationOfCommanCentre
         }
         
         var randomCoordinate = GetTargetCoordinate(emptyTiles);
-        return new CommandCenter.Model.CommandCenter("CENTER-1", randomCoordinate, 1, Status.Expanding, null, null);
+        return new CommandCenter.Model.CommandCenter("CENTER-1", randomCoordinate, 1, Status.Expanding, 0, 0);
     }
     
     private List<Coordinate> GetVisibleTiles(Coordinate coordinate, SimulationContext simulationContext)

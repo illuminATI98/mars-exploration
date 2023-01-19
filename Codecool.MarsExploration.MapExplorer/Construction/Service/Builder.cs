@@ -73,6 +73,7 @@ public class Builder : IBuilder
                 {
                     Step = simulationContext.Step + 1
                 };
+                _logger.Construction(simulationContext);
             }
 
             var newRover = new Rover(construction.UnitId, construction.Position, null, null, Routine.Exploring, null, 0, Task.WaterGathering,0);

@@ -16,7 +16,7 @@ public abstract class BaseRoutine
         _simulationContext = simulationContext;
     }
     
-    protected void Move(Rover rover,Coordinate coordinate)
+    public void Move(Rover rover,Coordinate coordinate)
     {
         rover.CurrentPosition = coordinate;
     }
