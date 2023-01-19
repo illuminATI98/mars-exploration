@@ -11,12 +11,19 @@ public class CommandCenter
     public int Radius { get; }
     
     public Status Status { get; set; }
+    
+    public List<Coordinate> WaterResources { get; set; }
+    
+    public List<Coordinate> MineralResources { get; set; }
 
-    public CommandCenter(string id, Coordinate currentPosition, int radius, Status status)
+    public CommandCenter(string id, Coordinate currentPosition, int radius, Status status, List<Coordinate> waterResources,
+        List<Coordinate> mineralResources)
     {
         Id = id;
         CurrentPosition = currentPosition;
         Radius = radius;
         Status = status;
+        WaterResources = waterResources;
+        MineralResources = mineralResources;
     }
 }

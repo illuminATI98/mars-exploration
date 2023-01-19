@@ -43,7 +43,8 @@ class Program
             mapLoader.Load(mapFile).Representation, costCalculator);
         IBuilder builder = new Builder(logger); 
 
-        IExplorationSimulator explorationSimulator = new ExplorationSimulator(mapLoader, configurationValidator, lackOfResourcesAnalyzer,successAnalyzer,timeOutAnalyzer,roverDeployer, simulationStepLoggingUi, getLocationOfCommanCentre, pathfinder, coordinateCalculator,builder);
+        IExplorationSimulator explorationSimulator = new ExplorationSimulator(mapLoader, configurationValidator, lackOfResourcesAnalyzer,successAnalyzer,timeOutAnalyzer,roverDeployer, 
+            simulationStepLoggingUi, getLocationOfCommanCentre, pathfinder, coordinateCalculator,builder, logger);
         
         explorationSimulator.RunSimulation(configObject);
     }

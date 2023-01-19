@@ -1,5 +1,6 @@
 ﻿using Codecool.MarsExploration.MapExplorer.MarsRover;
 using Codecool.MarsExploration.MapExplorer.Simulation.Model;
+using Codecool.MarsExploration.MapGenerator.Calculators.Model;
 
 namespace Codecool.MarsExploration.MapExplorer.Logger;
 
@@ -35,5 +36,18 @@ public class ConsoleLogger : ILogger
     public void Construction(SimulationContext simulationContext)
     {
         Console.WriteLine($"STEP {simulationContext.Step}; EVENT construction; UNIT {simulationContext.Construction.UnitId}; POSITION [{simulationContext.Construction.Position.X},{simulationContext.Construction.Position.Y}]; PROGRESS {simulationContext.Construction.Progress} of {simulationContext.Construction.StepsToComplete}");
+    }
+
+    public void Final(SimulationContext simulationContext)
+    {
+        Console.Write($"STEP {simulationContext.Step}; EVENT simulation over; BUILT COMMAND CENTRES {simulationContext.CommandCenters.First().Id}; " +
+                          $"ROVERS  ");
+        foreach (var rover in simulationContext.Rovers)
+        {
+             Console.Write($"{rover.Id} ");
+        }
+        
+        Console.Write($"MINERALS: {simulationContext.CommandCenters.First().MineralResources.Count}; ");
+        Console.Write($"WATERS: {simulationContext.CommandCenters.First().WaterResources.Count};");
     }
 }
