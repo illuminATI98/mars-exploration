@@ -4,28 +4,36 @@ namespace Codecool.MarsExploration.MapExplorer.Pathfinder;
 
 public class CostCalculator : ICostCalculator
 {
-    public int GCost(Coordinate startingNode, Coordinate targetNode)
+    private int DiagonalDistance()
     {
-        return PythagorasDistance(startingNode, targetNode);
+        return PythagorasDistance(new Coordinate(0, 0), new Coordinate(1, 1));
     }
-
-    public int HCost(Coordinate endNode, Coordinate targetNode)
+    private int HorizontalDistance()
     {
-        return PythagorasDistance(endNode, targetNode);
+        return PythagorasDistance(new Coordinate(0, 0), new Coordinate(0, 1));
     }
-
-    public int FCost(int gCost, int hCost)
-    {
-        return gCost + hCost;
-    }
-
     private int PythagorasDistance(Coordinate startingNode, Coordinate targetNode)
     {
         int xDistance = Math.Abs(startingNode.X - targetNode.X);
         int yDistance = Math.Abs(startingNode.Y - targetNode.Y);
-
+        
         double distance = Math.Sqrt(Math.Pow(xDistance, 2) + Math.Pow(yDistance, 2));
 
-        return (int)Math.Round(distance, 0, MidpointRounding.AwayFromZero) * 10;
+        return (int)Math.Round(distance * 10, 0, MidpointRounding.AwayFromZero);
+    }
+    
+    public int GetDistanceCost(Node nodeA, Node nodeB)
+    {
+        int distX = Math.Abs(nodeA.MapPosition.X - nodeB.MapPosition.X);
+        int distY = Math.Abs(nodeA.MapPosition.Y - nodeB.MapPosition.Y);
+
+        int horizontalDistance = HorizontalDistance();
+        int diagonalDistance = DiagonalDistance();
+
+        if (distX > distY)
+        {
+            return diagonalDistance * distY + horizontalDistance * (distX - distY);
+        }
+        return diagonalDistance * distX + horizontalDistance * (distY - distX);
     }
 }
