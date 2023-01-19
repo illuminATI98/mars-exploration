@@ -10,6 +10,7 @@ using Codecool.MarsExploration.MapExplorer.Pathfinder.Pathfinding;
 using Codecool.MarsExploration.MapExplorer.Simulation.Model;
 using Codecool.MarsExploration.MapExplorer.UI;
 using Codecool.MarsExploration.MapGenerator.Calculators.Model;
+using Codecool.MarsExploration.MapGenerator.Calculators.Service;
 using Codecool.MarsExploration.MapGenerator.MapElements.Model;
 
 namespace Codecool.MarsExploration.MapExplorer.Simulation.Service;
@@ -26,12 +27,13 @@ public class ExplorationSimulator : IExplorationSimulator
     private SimulationStepLoggingUi _simulationStepLoggingUi;
     private IGetLocationOfCommanCentre _getLocationOfCommandCentre;
     private IPathfinder _pathfinder;
+    private ICoordinateCalculator _coordinateCalculator;
     
 
     public ExplorationSimulator(IMapLoader mapLoader, IConfigurationValidator configurationValidator, IOutcomeAnalyzer lackOfResourcesAnalyzer, 
         IOutcomeAnalyzer succesAnalyzer, IOutcomeAnalyzer timeOutanalyzer, IRoverDeployer roverDeployer, 
         SimulationStepLoggingUi simulationStepLoggingUi, IGetLocationOfCommanCentre getLocationOfCommandCentre,
-        IPathfinder pathfinder)
+        IPathfinder pathfinder, ICoordinateCalculator coordinateCalculator)
     {
         _mapLoader = mapLoader;
         _configurationValidator = configurationValidator;
@@ -42,6 +44,7 @@ public class ExplorationSimulator : IExplorationSimulator
         _simulationStepLoggingUi = simulationStepLoggingUi;
         _getLocationOfCommandCentre = getLocationOfCommandCentre;
         _pathfinder = pathfinder;
+        _coordinateCalculator = coordinateCalculator;
     }
 
     public void RunSimulation(Configuration.Configuration configuration)
@@ -70,10 +73,10 @@ public class ExplorationSimulator : IExplorationSimulator
         
         //Choose the location of the command centre and init 
         simulationContext = InitCommandCentre(colonizableSpot, simulationContext);
-        _simulationStepLoggingUi.Run(simulationContext);
+        
         
         //Rover one extracts minerals and gathers them at the command centre Coordinate
-        FirstRoverPath(simulationContext.Rovers.First().CurrentPosition);
+        FirstRoverPath(simulationContext, map, _coordinateCalculator);
 
         //Build the centre
 
@@ -140,14 +143,58 @@ public class ExplorationSimulator : IExplorationSimulator
         return simulationContext;
     }
 
-    private void FirstRoverPath(Coordinate position)
+    private void FirstRoverPath(SimulationContext simulationContext, Map map, ICoordinateCalculator coordinateCalculator)
     {
-        Node start = new Node(true, position);
-        Node target = new Node(true, position);
-        var path = _pathfinder.FindPath(start, target);
-        foreach (var node in path)
+        Node started = new Node(true, simulationContext.Rovers.First().CurrentPosition);
+        var mineralPlaces = new Queue<Coordinate>();
+        foreach (var encounteredResource in simulationContext.Rovers.First().EncounteredResources)
         {
-            Console.WriteLine(node);
+            if (map.Representation[encounteredResource.X, encounteredResource.Y] == "%")
+            {
+                mineralPlaces.Enqueue(encounteredResource);
+            }
         }
+        foreach (var mineralPlace in mineralPlaces)
+        {
+            Console.WriteLine($"MINERAL PLACE: {mineralPlace}");
+            
+        }
+        
+        foreach (var mineralPlace in mineralPlaces)
+        {
+             Node start = new Node(true, simulationContext.Rovers.First().CurrentPosition);
+            var possibleTargetCoordinates = coordinateCalculator.GetAdjacentCoordinates(mineralPlace, 32).ToList();
+            var randomCor = Random.Next(possibleTargetCoordinates.Count);
+            
+            Node target = new Node(true, possibleTargetCoordinates[randomCor]);
+
+            var path = _pathfinder.FindPath(start, target);
+            
+            var changeRover = new Rover(simulationContext.Rovers.First().Id, target.MapPosition,
+                simulationContext.Rovers.First().VisibleTiles, simulationContext.Rovers.First().EncounteredResources,
+                Routine.Extracting);
+            
+            simulationContext = simulationContext with
+            {
+                Rovers = new List<Rover>{changeRover}
+            };
+            
+            RemoveCollectedMineralFromMap( mineralPlace, simulationContext);
+            
+            foreach (var node in path)
+            {
+                Console.WriteLine(node.MapPosition);
+            }
+
+        }
+
+        Node finalPosition = new Node(true, simulationContext.Rovers.First().CurrentPosition);
+        _pathfinder.FindPath(finalPosition, started);
+
+    }
+
+    private void RemoveCollectedMineralFromMap(Coordinate mineral, SimulationContext simulationContext)
+    {
+        simulationContext.Map.Representation[mineral.X, mineral.Y] = " ";
     }
 }
