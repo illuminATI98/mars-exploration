@@ -9,50 +9,80 @@ namespace Codecool.MarsExploration.MapExplorer.Construction.Service;
 
 public class Builder : IBuilder
 {
-    private ILogger _logger;
+    private readonly ILogger _logger;
     
     public Builder(ILogger logger)
     {
         _logger = logger;
     }
-    public SimulationContext Build(SimulationContext simulationContext, Model.Construction construction)
+    public SimulationContext Build(SimulationContext simulationContext, string unit)
     {
-        simulationContext = simulationContext with
+        if (unit == "center")
         {
-            Construction = construction
-        };
-        while (simulationContext.Construction.Progress < simulationContext.Construction.StepsToComplete)
-        {
-            simulationContext.Construction.Progress++;
+            var center = simulationContext.CommandCenters.Last();
+            var construction = new Model.Construction(center.Id, center.CurrentPosition, 0, 10);
             
             simulationContext = simulationContext with
             {
-                Step = simulationContext.Step + 1
+                Construction = construction
             };
-            _logger.Construction(simulationContext);
-        }
-        foreach (var commandCenter in simulationContext.CommandCenters)
-        {
-            if (commandCenter.Id == construction.UnitId)
+            while (simulationContext.Construction.Progress < simulationContext.Construction.StepsToComplete)
             {
-                commandCenter.Status = Status.Active;
-                return simulationContext;
+                simulationContext.Construction.Progress++;
+                
+                simulationContext = simulationContext with
+                {
+                    Step = simulationContext.Step + 1
+                };
+                _logger.Construction(simulationContext);
+            }
+            foreach (var commandCenter in simulationContext.CommandCenters)
+            {
+                if (commandCenter.Id == construction.UnitId)
+                {
+                    commandCenter.Status = Status.Active;
+                    return simulationContext;
+                }
             }
         }
 
-        // var roverIds = new List<string>();
-        // foreach (var rover in simulationContext.Rovers)
-        // {
-        //     roverIds.Add(rover.Id);
-        // }
-        //
-        // if (!roverIds.Contains(construction.UnitId))
-        // {
-        //     var lastId = roverIds.Last();
-        //     var newId = Regex.Replace(lastId, @"\d+$", match => (int.Parse(match.Value) + 1).ToString());
-        //     
-        // }
-        
+        if (unit == "rover")
+        {
+            var center = simulationContext.CommandCenters.Last();
+            var roverIds = new List<string>();
+            foreach (var rover in simulationContext.Rovers)
+            {
+                roverIds.Add(rover.Id);
+            }
+            var lastId = roverIds.Last();
+            var newId = Regex.Replace(lastId, @"\d+$", match => (int.Parse(match.Value) + 1).ToString());
+            
+            var construction = new Model.Construction(newId, center.CurrentPosition, 0, 10);
+            
+            simulationContext = simulationContext with
+            {
+                Construction = construction
+            };
+            
+            while (simulationContext.Construction.Progress < simulationContext.Construction.StepsToComplete)
+            {
+                simulationContext.Construction.Progress++;
+                
+                simulationContext = simulationContext with
+                {
+                    Step = simulationContext.Step + 1
+                };
+                _logger.Construction(simulationContext);
+            }
+
+            var newRover = new Rover(construction.UnitId, construction.Position, null, null, Routine.Exploring);
+            var rovers = simulationContext.Rovers.ToList();
+            rovers.Add(newRover);
+            simulationContext = simulationContext with
+            {
+                Rovers = rovers
+            };
+        }
         return simulationContext;
     }
 }
