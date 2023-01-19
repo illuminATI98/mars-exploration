@@ -1,4 +1,5 @@
-﻿using Codecool.MarsExploration.MapGenerator.Calculators.Model;
+﻿using Codecool.MarsExploration.MapExplorer.Pathfinder.Optimisation;
+using Codecool.MarsExploration.MapGenerator.Calculators.Model;
 using Codecool.MarsExploration.MapGenerator.Calculators.Service;
 
 namespace Codecool.MarsExploration.MapExplorer.Pathfinder.Pathfinding;
@@ -18,23 +19,15 @@ public class Pathfinder : IPathfinder
 
     public IEnumerable<Node>? FindPath(Node startingNode, Node targetNode)
     {
-        List<Node> openNodes = new List<Node>();
+        Heap<Node> openNodes = new Heap<Node>(_map.GetLength(0));
         HashSet<Node> closedNodes = new HashSet<Node>();
         List<Node> path = new List<Node>();
         bool exit = false;
         openNodes.Add(startingNode);
 
-        while (openNodes.Any() && !exit)
+        while (openNodes.Count() > 0 && !exit)
         {
-            Node currentNode = openNodes[0];
-            for (var i = 0; i < openNodes.Count; i++)
-            {
-                if (openNodes[i].FCost < currentNode.FCost || openNodes[i].FCost == currentNode.FCost && openNodes[i].HCost < currentNode.HCost)
-                {
-                    currentNode = openNodes[i];
-                }
-            }
-            openNodes.Remove(currentNode);
+            Node currentNode = openNodes.RemoveFirst();
             closedNodes.Add(currentNode);
 
             if (currentNode.MapPosition == targetNode.MapPosition)
@@ -83,7 +76,6 @@ public class Pathfinder : IPathfinder
     {
         List<Node> path = new List<Node>();
         Node currentNode = endNode;
-        Console.WriteLine(endNode);
         while (startNode != currentNode)
         {
             path.Add(currentNode);
