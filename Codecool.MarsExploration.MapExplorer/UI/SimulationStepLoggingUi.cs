@@ -1,5 +1,6 @@
 using Codecool.MarsExploration.MapExplorer.Exploration;
 using Codecool.MarsExploration.MapExplorer.Logger;
+using Codecool.MarsExploration.MapExplorer.MarsRover;
 using Codecool.MarsExploration.MapExplorer.Simulation.Model;
 
 namespace Codecool.MarsExploration.MapExplorer.UI;
@@ -15,15 +16,8 @@ public class SimulationStepLoggingUi
 
     public void Run(SimulationContext simulationContext)
     {
-        
         switch (simulationContext.ExplorationOutcome)
         {
-            case ExplorationOutcome.InProgress:
-                foreach (var rover in simulationContext.Rovers)
-                {
-                    _logger.Position(rover,simulationContext);
-                }
-                break;
             case ExplorationOutcome.Colonizable:
                 
                 _logger.OutCome(simulationContext);
@@ -37,6 +31,18 @@ public class SimulationStepLoggingUi
                 _logger.OutCome(simulationContext);
                 break;
         }
-        
+
+        foreach (var simulationContextRover in simulationContext.Rovers)
+        {
+            switch (simulationContextRover.CurrentRoutine)
+            {
+                case Routine.Exploring:
+                    _logger.Position(simulationContextRover, simulationContext);
+                    break;
+                case Routine.Extracting:
+                    _logger.Extracting(simulationContextRover, simulationContext);
+                        break;
+            }
+        }
     }
 }
