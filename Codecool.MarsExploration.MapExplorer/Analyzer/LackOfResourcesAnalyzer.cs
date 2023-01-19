@@ -13,9 +13,9 @@ public class LackOfResourcesAnalyzer : IOutcomeAnalyzer
     public ExplorationOutcome Analyze(SimulationContext simulationContext, int step)
     {
         var mapCharts = simulationContext.Map.Representation.GetLength(0) * simulationContext.Map.Representation.GetLength(1);
-        var roverExplored = simulationContext.Rover.EncounteredResources.Count();
+        var roverExplored = simulationContext.Rovers.First().EncounteredResources.Count();
         
-        var encounteredCoordinates = simulationContext.Rover.EncounteredResources;
+        var encounteredCoordinates = simulationContext.Rovers.First().EncounteredResources;
         var map = simulationContext.Map.Representation;
         var minerals = new List<string?>();
         var waters = new List<string?>();

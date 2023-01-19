@@ -22,9 +22,12 @@ public class ExplorationSimulator : IExplorationSimulator
     private  IOutcomeAnalyzer _timeOutanalyzer;
     private IRoverDeployer _roverDeployer;
     private SimulationStepLoggingUi _simulationStepLoggingUi;
+    private IGetLocationOfCommanCentre _getLocationOfCommandCentre;
     
 
-    public ExplorationSimulator(IMapLoader mapLoader, IConfigurationValidator configurationValidator, IOutcomeAnalyzer lackOfResourcesAnalyzer, IOutcomeAnalyzer succesAnalyzer, IOutcomeAnalyzer timeOutanalyzer, IRoverDeployer roverDeployer, SimulationStepLoggingUi simulationStepLoggingUi)
+    public ExplorationSimulator(IMapLoader mapLoader, IConfigurationValidator configurationValidator, IOutcomeAnalyzer lackOfResourcesAnalyzer, 
+        IOutcomeAnalyzer succesAnalyzer, IOutcomeAnalyzer timeOutanalyzer, IRoverDeployer roverDeployer, 
+        SimulationStepLoggingUi simulationStepLoggingUi, IGetLocationOfCommanCentre getLocationOfCommandCentre)
     {
         _mapLoader = mapLoader;
         _configurationValidator = configurationValidator;
@@ -33,49 +36,42 @@ public class ExplorationSimulator : IExplorationSimulator
         _timeOutanalyzer = timeOutanalyzer;
         _roverDeployer = roverDeployer;
         _simulationStepLoggingUi = simulationStepLoggingUi;
+        _getLocationOfCommandCentre = getLocationOfCommandCentre;
     }
 
     public void RunSimulation(Configuration.Configuration configuration)
     {
         var map = _mapLoader.Load(configuration.MapFile);
+        
+        //Landing spot for the spaceship
         var landingSpot = CheckLandingSpotForClear(configuration.LandingSpot, map);
-        // var rover = _roverDeployer.Deploy();
-        // var simulationContext = new SimulationContext(0, configuration.StepsToTimeOut, rover,
-        //     landingSpot, map, configuration.SymbolsOfTheResources);
-        // ExploringRoutine exploringRoutine = new ExploringRoutine(simulationContext);
-        //
-        // SimulationLoop(simulationContext, exploringRoutine);
-    }
-
-    public SimulationContext HandleOutcome(SimulationContext simulationContext, ExplorationOutcome outcome)
-    {
-        return simulationContext with { ExplorationOutcome = outcome };
-    }
-
-    private void SimulationLoop(SimulationContext simulationContext, ExploringRoutine exploringRoutine)
-    {
-        int step = 1;
-        while (simulationContext.ExplorationOutcome == ExplorationOutcome.InProgress &&
-               simulationContext.StepsToReachTimeOut >= step)
+        
+        //Rover deployer in an adjacent coordinate
+        var rover1 = _roverDeployer.Deploy();
+        
+        //Rover one begins its exploration routine
+        var simulationContext = new SimulationContext(0, configuration.StepsToTimeOut, new List<Rover>{rover1},null,
+            landingSpot, map, configuration.SymbolsOfTheResources);
+        ExploringRoutine exploringRoutine = new ExploringRoutine(simulationContext);
+        
+        //Rover one finds a colonisable spot
+        while (simulationContext.ExplorationOutcome != ExplorationOutcome.Colonizable)
         {
-            _simulationStepLoggingUi.Run(simulationContext, step);
-            //exploringRoutine.Step(simulationContext.Rover);
-            var results = new[]
-            {
-                _lackOfResourcesAnalyzer.Analyze(simulationContext, step),
-                _succesAnalyzer.Analyze(simulationContext, step),
-                _timeOutanalyzer.Analyze(simulationContext, step)
-            };
-            if (results.Any(s => s != ExplorationOutcome.InProgress))
-            {
-                var outcome = results.Single(s => s != ExplorationOutcome.InProgress);
-                simulationContext = HandleOutcome(simulationContext, outcome);
-                _simulationStepLoggingUi.Run(simulationContext, step);
-            }
-
-            step++;
+            simulationContext = SimulationLoop(new SimulationContext(0, configuration.StepsToTimeOut, new List<Rover>{rover1},null,
+                landingSpot, map, configuration.SymbolsOfTheResources), exploringRoutine);
         }
+
+        var colonizableSpot = simulationContext.Rovers.First().CurrentPosition;
+        
+        //Choose the location of the command centre 
+        var commandCentre = _getLocationOfCommandCentre.GetCentreLocation(colonizableSpot, simulationContext);
+        Console.WriteLine(commandCentre.CurrentPosition);
+        
+        //Rover one extracts minerals and gathers them at the chosen command centre Coordinate
+
+
     }
+    
     private Coordinate CheckLandingSpotForClear(Coordinate landingCoordinate, Map map)
     {
         while (!_configurationValidator.LandingSpotValidate(map,landingCoordinate))
@@ -85,5 +81,37 @@ public class ExplorationSimulator : IExplorationSimulator
         }
 
         return landingCoordinate;
+    }
+
+    public SimulationContext HandleOutcome(SimulationContext simulationContext, ExplorationOutcome outcome)
+    {
+        return simulationContext with { ExplorationOutcome = outcome };
+    }
+
+    private SimulationContext SimulationLoop(SimulationContext simulationContext, ExploringRoutine exploringRoutine)
+    {
+        int step = 1;
+        while (simulationContext.ExplorationOutcome == ExplorationOutcome.InProgress &&
+               simulationContext.StepsToReachTimeOut >= step)
+        {
+            _simulationStepLoggingUi.Run(simulationContext, step);
+            exploringRoutine.Step(simulationContext.Rovers.First());
+            var results = new[]
+            {
+                _lackOfResourcesAnalyzer.Analyze(simulationContext, step),
+                _succesAnalyzer.Analyze(simulationContext, step),
+                _timeOutanalyzer.Analyze(simulationContext, step)
+            };
+            if (results.Any(s => s != ExplorationOutcome.InProgress))
+            {
+                var outcome = results.First(s => s != ExplorationOutcome.InProgress);
+                simulationContext = HandleOutcome(simulationContext, outcome);
+                _simulationStepLoggingUi.Run(simulationContext, step);
+            }
+
+            step++;
+        }
+
+        return simulationContext;
     }
 }
